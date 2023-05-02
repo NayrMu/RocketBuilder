@@ -75,9 +75,13 @@ FuelCan3 = {'TotalMass': Decimal(2.25), 'NonFuelMass': Decimal(0.25), 'Count': 0
 fuelCans = [FuelCan1]
 '''
 
-FuelCan1 = {'TotalMass': Decimal(0.6), 'NonFuelMass': Decimal(0.06), 'Count': 0}
-FuelCan2 = {'TotalMass': Decimal(1.13), 'NonFuelMass': Decimal(0.13), 'Count': 0}
-FuelCan3 = {'TotalMass': Decimal(2.25), 'NonFuelMass': Decimal(0.25), 'Count': 0}
+FuelCan1 = {'TotalMass': Decimal(0.6), 'NonFuelMass': Decimal(0.06), 'Count': 0, 'RadialSize': 1}
+FuelCan2 = {'TotalMass': Decimal(1.13), 'NonFuelMass': Decimal(0.13), 'Count': 0, 'RadialSize': 1}
+FuelCan3 = {'TotalMass': Decimal(2.25), 'NonFuelMass': Decimal(0.25), 'Count': 0, 'RadialSize': 1}
+largeFuelCan1 = {'TotalMass': Decimal(4.5), 'NonFuelMass': Decimal(0.50), 'Count': 0, 'RadialSize': 2}
+largeFuelCan2 = {'TotalMass': Decimal(9), 'NonFuelMass': Decimal(1.0), 'Count': 0, 'RadialSize': 2}
+largeFuelCan3 = {'TotalMass': Decimal(18), 'NonFuelMass': Decimal(2.0), 'Count': 0, 'RadialSize': 2}
+adapterSmallLarge = {'TotalMass': Decimal(4.57), 'NonFuelMass': Decimal(0.57), 'Count': 0, 'RadialSize': 1}
 fuelCans = [FuelCan1]
 
 def reset_Var():
@@ -119,6 +123,13 @@ def reset_Var():
     FuelCan3['Count'] = 0
     fuelCans = [FuelCan1]
     
+def sumOfDictionaries(dictionaries, key1, key2):
+    totalSum = 0
+    for dictionary in dictionaries:
+        value1 = dictionary.get(key1, 0)
+        value2 = dictionary.get(key2, 0)
+        totalSum += value1 * value2
+    return(totalSum)
 
 def part_Counter():
     #this iterates through fuelCans to count how many there are so i can keep track of it later
@@ -131,8 +142,8 @@ def part_Counter():
     global fuelCans
     ##for i in fuelCans:
         ##i['Count'] +=1
-    fuelCanMassTons = (FuelCan1['Count'] * FuelCan1['NonFuelMass']) + (FuelCan2['Count'] * FuelCan2['NonFuelMass']) + (FuelCan3['Count'] * FuelCan3['NonFuelMass'])
-    fuelTotalMassTons = (FuelCan1['Count'] * FuelCan1['TotalMass']) + (FuelCan2['Count'] * FuelCan2['TotalMass']) + (FuelCan3['Count'] * FuelCan3['TotalMass'])
+    fuelCanMassTons = sumOfDictionaries(fuelCans, 'Count', 'nonFuelMass')
+    fuelTotalMassTons = sumOfDictionaries(fuelCans, 'Count', 'TotalMass')
     
 part_Counter()
 ##print(FuelCan1)
