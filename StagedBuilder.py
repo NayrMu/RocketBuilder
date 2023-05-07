@@ -142,8 +142,8 @@ def part_Counter():
     global fuelCans
     ##for i in fuelCans:
         ##i['Count'] +=1
-    fuelCanMassTons = sumOfDictionaries(fuelCans, 'Count', 'nonFuelMass')
-    fuelTotalMassTons = sumOfDictionaries(fuelCans, 'Count', 'TotalMass')
+    fuelCanMassTons = (FuelCan1['Count'] * FuelCan1['NonFuelMass']) + (FuelCan2['Count'] * FuelCan2['NonFuelMass']) + (FuelCan3['Count'] * FuelCan3['NonFuelMass'])
+    fuelTotalMassTons = (FuelCan1['Count'] * FuelCan1['TotalMass']) + (FuelCan2['Count'] * FuelCan2['TotalMass']) + (FuelCan3['Count'] * FuelCan3['TotalMass'])
     
 part_Counter()
 ##print(FuelCan1)
@@ -206,19 +206,20 @@ variableCalculatorUsable()
 for i in  range(numStages):
 
     for x in engineLibrary.keys():
-        print(payloadMass)
+        ##print(payloadMass)
         reset_Var()
         ##print(dV)
         engineModel = x
         print(engineModel)
         while dV < desiredDeltaV:
             part_Counter()
+            #print('partcounter ran')
             ##print(fuelCans)
             variableCalculatorWorking()
             variableCalculatorUsable()
             ##print(' ')
             ##print(fuelCans)
-            if FuelCan1['Count'] >= 1:
+            if FuelCan1['Count'] >= 1: # and FuelCan2['Count']< 3:
                 fuelCans.pop()
                 fuelCans.append(FuelCan2)
                 FuelCan1['Count'] = 0
@@ -226,7 +227,7 @@ for i in  range(numStages):
                 ##print(fuelCans)
                 ##print("tank2 added")
 
-            elif FuelCan2['Count'] >= 1:
+            elif FuelCan2['Count'] >= 1: # and FuelCan3['Count']< 3:
                 fuelCans.pop()
                 fuelCans.append(FuelCan3)
                 FuelCan2['Count'] = 0
@@ -238,6 +239,31 @@ for i in  range(numStages):
                 FuelCan1['Count'] += 1
                 ##print(fuelCans)
                 ##print("tank1 added")
+            '''
+            else:
+                fuelCans.append(adapterSmallLarge)
+                print(fuelCans)
+                if largeFuelCan1['Count'] >= 1 and largeFuelCan2['Count']< 3:
+                    fuelCans.pop()
+                    fuelCans.append(largeFuelCan2)
+                    largeFuelCan1['Count'] = 0
+                    largeFuelCan2['Count'] += 1
+                    ##print(fuelCans)
+                    ##print("tank2 added")
+
+                elif largeFuelCan2['Count'] >= 1 and largeFuelCan3['Count']< 3:
+                    fuelCans.pop()
+                    fuelCans.append(largeFuelCan3)
+                    largeFuelCan2['Count'] = 0
+                    largeFuelCan3['Count'] += 1
+                    ##print(fuelCans)
+                    ##print("tank3 added")
+                elif largeFuelCan1['Count'] < 3:
+                    fuelCans.append(largeFuelCan1)
+                    largeFuelCan1['Count'] += 1
+                    ##print(fuelCans)
+                    ##print("tank1 added")
+                '''
             part_Counter()
             variableCalculatorWorking()
             variableCalculatorUsable()
@@ -245,8 +271,8 @@ for i in  range(numStages):
             ##print(FuelCan1['Count'], ' small fuel cans.', FuelCan2['Count'], ' medium fuel cans.', FuelCan3['Count'], ' large fuel cans.')
 
         formattedDV = '{0:.2f}'.format(dV)
-        print(formattedDV)
-        print(FuelCan1['Count'], ' small fuel cans.', FuelCan2['Count'], ' medium fuel cans.', FuelCan3['Count'], ' large fuel cans.')
+        ##print(formattedDV)
+        print('DeltaV is:', formattedDV, FuelCan1['Count'], ' small fuel cans.', FuelCan2['Count'], ' medium fuel cans.', FuelCan3['Count'], ' large fuel cans.')
         ##print(fuelCanMass)
         ##print(engineModel)
         print("Start: ", str(convert_KG_To_Ton(initialMass)), "End: ", str(convert_KG_To_Ton(finalMass)))
