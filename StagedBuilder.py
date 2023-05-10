@@ -9,6 +9,7 @@ The purpose of this is to expand upon the capabilities of WomboCombo3 so that it
 
 from math import *
 from decimal import *
+from pickle import FALSE
 
 getcontext().prec = 6
 
@@ -28,18 +29,24 @@ def convert_KG_To_Ton(WK):
     return(MassTons)
 
 def twrCalculator(T, W):
-    twr = Decimal(T/W)
+    twr = Decimal(T/(W * Decimal(9.81)))
     return(twr)
 
+def boolCheck(string):
+    checkList = ['true', 't', 'y', 'yes', 'yeah', 'yea', 'yup', 'certainly', 'uh-huh', 'affirmative', 'confirm']
+    if string in checkList:
+        return(True)
+    else:
+        return(False)
 '''
 engineLibrary = {'LV-909': {'Mass': Decimal(0.5), 'Thrust': Decimal(14.783), 'Isp': Decimal(834.70)},
                           'LV-30': {'Mass': Decimal(1.25), 'Thrust':Decimal(205.161) , 'Isp': Decimal(2602.30)},
                            'LV-45': {'Mass': Decimal(1.5), 'Thrust': Decimal(167.969), 'Isp': Decimal(2455.0)}}
 '''
-engineLibrary = {'LV-909': {'Mass': Decimal(0.5), 'Thrust': Decimal(14.7), 'Isp': Decimal(835.0)},
-                          'LV-30': {'Mass': Decimal(1.25), 'Thrust':Decimal(205.1) , 'Isp': Decimal(2602.0)},
-                           'LV-45': {'Mass': Decimal(1.5), 'Thrust': Decimal(167.9), 'Isp': Decimal(2455.0)}}
-
+engineLibrary = {'LV-909': {'Mass': Decimal(0.5), 'Thrust': Decimal(14.7), 'Isp': Decimal(835.0), 'VacThrust': Decimal(60.0), 'VacIsp': Decimal(3384.45)},
+                 'LV-30': {'Mass': Decimal(1.25), 'Thrust':Decimal(205) , 'Isp': Decimal(2602.0), 'VacThrust': Decimal(240.0), 'VacIsp': Decimal(3041.1)},
+                 'LV-45': {'Mass': Decimal(1.5), 'Thrust': Decimal(168), 'Isp': Decimal(2455.0), 'VacThrust': Decimal(215.0), 'VacIsp': Decimal(3139.2)}}
+#
 #variable creation
 payloadMassKG = 0
 payloadMassTons = 0
@@ -61,13 +68,15 @@ engineIsp = 0
 engineModel = ' '
 desiredDeltaV = 0
 twrMin = 1.3
+twr = 1.3
+thrust = 'Thrust'
+Isp = 'Isp'
 
 #getting input
 numStages = int(input("How many stages would you like? "))
-desiredDeltaV = int(input("Please enter your deisred deltaV: "))
 payloadMassTons = Decimal(input("Please enter your payload Mass in Tons: "))
 engineModel = 'LV-909'
-#fuelcans are dicitonaries so i can keep track of multiple pieces of info at once
+#fuelcans are dictionaries so i can keep track of multiple pieces of info at once
 '''
 FuelCan1 = {'TotalMass': Decimal(0.5625), 'NonFuelMass': Decimal(0.0625), 'Count': 0}
 FuelCan2 = {'TotalMass': Decimal(1.125), 'NonFuelMass': Decimal(0.125), 'Count': 0}
@@ -78,16 +87,13 @@ fuelCans = [FuelCan1]
 FuelCan1 = {'TotalMass': Decimal(0.6), 'NonFuelMass': Decimal(0.06), 'Count': 0, 'RadialSize': 1}
 FuelCan2 = {'TotalMass': Decimal(1.13), 'NonFuelMass': Decimal(0.13), 'Count': 0, 'RadialSize': 1}
 FuelCan3 = {'TotalMass': Decimal(2.25), 'NonFuelMass': Decimal(0.25), 'Count': 0, 'RadialSize': 1}
-largeFuelCan1 = {'TotalMass': Decimal(4.5), 'NonFuelMass': Decimal(0.50), 'Count': 0, 'RadialSize': 2}
-largeFuelCan2 = {'TotalMass': Decimal(9), 'NonFuelMass': Decimal(1.0), 'Count': 0, 'RadialSize': 2}
-largeFuelCan3 = {'TotalMass': Decimal(18), 'NonFuelMass': Decimal(2.0), 'Count': 0, 'RadialSize': 2}
+largeFuelCan1 = {'TotalMass': Decimal(1.2375), 'NonFuelMass': Decimal(0.1), 'Count': 0, 'RadialSize': 2}
+largeFuelCan2 = {'TotalMass': Decimal(2.475), 'NonFuelMass': Decimal(0.3), 'Count': 0, 'RadialSize': 2}
+largeFuelCan3 = {'TotalMass': Decimal(5.06), 'NonFuelMass': Decimal(0.56), 'Count': 0, 'RadialSize': 2}
 adapterSmallLarge = {'TotalMass': Decimal(4.57), 'NonFuelMass': Decimal(0.57), 'Count': 0, 'RadialSize': 1}
 fuelCans = [FuelCan1]
 
 def reset_Var():
-    global FuelCan1
-    global FuelCan2
-    global FuelCan3
     global fuelCans
     global fuelCanMassKG
     global fuelCanMassTons
@@ -118,35 +124,35 @@ def reset_Var():
     fuelCanMass = 0
     fuelCanMassTons = 0
     fuelCanMassKG = 0
-    FuelCan1['Count'] = 0
-    FuelCan2['Count'] = 0
-    FuelCan3['Count'] = 0
-    fuelCans = [FuelCan1]
+    for i in fuelCans:
+        i['Count'] = 0
+    fuelCans = []
+
     
 def sumOfDictionaries(dictionaries, key1, key2):
     totalSum = 0
+    uniqueFuelCans = set()
     for dictionary in dictionaries:
-        value1 = dictionary.get(key1, 0)
-        value2 = dictionary.get(key2, 0)
-        totalSum += value1 * value2
+        dictTuple = tuple(dictionary.items())
+        if dictTuple not in uniqueFuelCans:
+            ##print(dictionary[key1], dictionary[key2])
+            totalSum += dictionary[key1] * dictionary[key2]
+            uniqueFuelCans.add(dictTuple)
     return(totalSum)
+
 
 def part_Counter():
     #this iterates through fuelCans to count how many there are so i can keep track of it later
-    global FuelCan1
-    global FuelCan2
-    global FuelCan3
     global fuelCanMassTons
     global fuelTotalMassTons
-    global totalDryMass
     global fuelCans
-    ##for i in fuelCans:
-        ##i['Count'] +=1
-    fuelCanMassTons = (FuelCan1['Count'] * FuelCan1['NonFuelMass']) + (FuelCan2['Count'] * FuelCan2['NonFuelMass']) + (FuelCan3['Count'] * FuelCan3['NonFuelMass'])
-    fuelTotalMassTons = (FuelCan1['Count'] * FuelCan1['TotalMass']) + (FuelCan2['Count'] * FuelCan2['TotalMass']) + (FuelCan3['Count'] * FuelCan3['TotalMass'])
+    
+    fuelCanMassTons = sumOfDictionaries(fuelCans, 'Count', 'NonFuelMass')
+    fuelTotalMassTons = sumOfDictionaries(fuelCans, 'Count', 'TotalMass')
+
     
 part_Counter()
-##print(FuelCan1)
+#print(FuelCan1)
 ##print(fuelCans)
 ##print(fuelCanMassTons)
 ##print(fuelTotalMassTons)
@@ -165,7 +171,7 @@ def variableCalculatorWorking():
     ##print(fuelTotalMassKG)
     payloadMassKG = convert_Ton_To_KG(payloadMassTons)
     ##print(payloadMassKG)
-    engineIsp = engineLibrary[engineModel]['Isp']
+    engineIsp = engineLibrary[engineModel][Isp]
     ##print(engineIsp)
     engineMassTons = engineLibrary[engineModel]['Mass']
     ##print(engineMassTons)
@@ -204,22 +210,34 @@ def variableCalculatorUsable():
 
 variableCalculatorUsable()
 for i in  range(numStages):
-
+    desiredDeltaV = int(input("Please enter your desired deltaV for this stage: "))
+    vacOrNah = input("Is this stage going to be operating in a vacuum? ")
+    if boolCheck(vacOrNah):
+        thrust = 'VacThrust'
+        Isp = 'VacIsp'
+        twrMin = 0
+    else:
+        thrust = 'Thrust'
+        Isp = 'Isp'
+        twrMin = 1.3
     for x in engineLibrary.keys():
         ##print(payloadMass)
         reset_Var()
         ##print(dV)
         engineModel = x
         print(engineModel)
-        while dV < desiredDeltaV:
+        twr = 1.3
+        while dV < desiredDeltaV and twr >= twrMin:
             part_Counter()
-            #print('partcounter ran')
+            ##print('partcounter ran')
             ##print(fuelCans)
             variableCalculatorWorking()
             variableCalculatorUsable()
             ##print(' ')
             ##print(fuelCans)
-            if FuelCan1['Count'] >= 1: # and FuelCan2['Count']< 3:
+            ##print(dV)
+            ##print('small')
+            if FuelCan1['Count'] >= 1 and FuelCan2['Count']< 3:
                 fuelCans.pop()
                 fuelCans.append(FuelCan2)
                 FuelCan1['Count'] = 0
@@ -227,23 +245,42 @@ for i in  range(numStages):
                 ##print(fuelCans)
                 ##print("tank2 added")
 
-            elif FuelCan2['Count'] >= 1: # and FuelCan3['Count']< 3:
+            elif FuelCan2['Count'] >= 1 and FuelCan3['Count']< 3:
                 fuelCans.pop()
                 fuelCans.append(FuelCan3)
                 FuelCan2['Count'] = 0
                 FuelCan3['Count'] += 1
                 ##print(fuelCans)
                 ##print("tank3 added")
-            else:
+            elif FuelCan1['Count']< 3:
                 fuelCans.append(FuelCan1)
                 FuelCan1['Count'] += 1
                 ##print(fuelCans)
                 ##print("tank1 added")
-            '''
-            else:
-                fuelCans.append(adapterSmallLarge)
-                print(fuelCans)
-                if largeFuelCan1['Count'] >= 1 and largeFuelCan2['Count']< 3:
+            elif  FuelCan1['Count']> 1  or FuelCan2['Count']>1 or FuelCan3['Count']>=3:
+                break
+            
+
+            part_Counter()
+            variableCalculatorWorking()
+            variableCalculatorUsable()
+            twr = twrCalculator(engineLibrary[engineModel][thrust], convert_KG_To_Ton(initialMass))
+            ##print('TWR is:', twr)
+            print(dV)
+        if dV < desiredDeltaV:
+            ##print('big start')
+            reset_Var()
+            twr = 1.3
+            fuelCans = []
+            ##fuelCans.append(adapterSmallLarge)
+            ##adapterSmallLarge['Count'] +=1
+            ##print('\nbig has started')
+            while dV < desiredDeltaV and twr >= twrMin:
+                ##print(fuelCans)
+                part_Counter()
+                variableCalculatorWorking()
+                variableCalculatorUsable()
+                if largeFuelCan1['Count'] >= 1 and largeFuelCan2['Count']< 1:
                     fuelCans.pop()
                     fuelCans.append(largeFuelCan2)
                     largeFuelCan1['Count'] = 0
@@ -258,21 +295,29 @@ for i in  range(numStages):
                     largeFuelCan3['Count'] += 1
                     ##print(fuelCans)
                     ##print("tank3 added")
-                elif largeFuelCan1['Count'] < 3:
+                elif largeFuelCan1['Count'] < 1:
                     fuelCans.append(largeFuelCan1)
                     largeFuelCan1['Count'] += 1
                     ##print(fuelCans)
                     ##print("tank1 added")
-                '''
-            part_Counter()
-            variableCalculatorWorking()
-            variableCalculatorUsable()
-            ##print(dV)
-            ##print(FuelCan1['Count'], ' small fuel cans.', FuelCan2['Count'], ' medium fuel cans.', FuelCan3['Count'], ' large fuel cans.')
+                elif  largeFuelCan1['Count']> 1  or largeFuelCan2['Count']>1 or largeFuelCan3['Count']>=3:
+                    break
+                
+                ##print(dV)
+                
+                part_Counter()
+                variableCalculatorWorking()
+                variableCalculatorUsable()
+                twr = twrCalculator(engineLibrary[engineModel][thrust], convert_KG_To_Ton(initialMass))
+                ##print('TWR is', twr)
+                ##print(dV)
+                ##print(FuelCan1['Count'], ' small fuel cans.', FuelCan2['Count'], ' medium fuel cans.', FuelCan3['Count'], ' large fuel cans.')
+                ##print(initialMass, finalMass)
+                ##print('dv:', dV, 'fuelcan1s:', FuelCan1['Count'], 'fuelcan2s:', FuelCan2['Count'], 'fuelcan3s:', FuelCan3['Count'], 'initialmass:', initialMass, 'finalMass:', finalMass, 'fuelTotalMass:', fuelTotalMass, 'fuelcanmass', fuelCanMass)
 
         formattedDV = '{0:.2f}'.format(dV)
         ##print(formattedDV)
-        print('DeltaV is:', formattedDV, FuelCan1['Count'], ' small fuel cans.', FuelCan2['Count'], ' medium fuel cans.', FuelCan3['Count'], ' large fuel cans.')
+        print('DeltaV is:', formattedDV, FuelCan1['Count'], ' small fuel cans.', FuelCan2['Count'], ' medium fuel cans.', FuelCan3['Count'], ' large fuel cans.', largeFuelCan1['Count'], ' big small fuel cans.', largeFuelCan2['Count'], ' big medium fuel cans.', largeFuelCan3['Count'], ' big large fuel cans.', 'With a thrust to weight ratio of', twr)
         ##print(fuelCanMass)
         ##print(engineModel)
         print("Start: ", str(convert_KG_To_Ton(initialMass)), "End: ", str(convert_KG_To_Ton(finalMass)))
